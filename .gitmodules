@@ -1,0 +1,3 @@
+[submodule "tig-stack"]
+	path = tig-stack
+	url = https://github.com/huntabyte/tig-stack
