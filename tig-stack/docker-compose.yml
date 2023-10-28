@@ -22,14 +22,13 @@ services:
       - influxdb
       - mqtt-broker
 
-  grafana:
-    image: grafana/grafana-oss:8.4.3
-    volumes:
-      - grafana-storage:/var/lib/grafana:rw
+  typescript:
+    build:
+      context: ./typescript-app
     depends_on:
       - influxdb
     ports:
-      - ${GRAFANA_PORT}:3000
+      - 8080:80
   
   mqtt-broker:
     image: eclipse-mosquitto:2
@@ -41,5 +40,4 @@ services:
 
 
 volumes:
-  grafana-storage:
   influxdb-storage:
