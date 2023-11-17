@@ -1,19 +1,10 @@
 {
-  "name": "typescript-app",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "type": "module",
   "devDependencies": {
-    "@types/node": "^20.8.10",
-    "typescript": "^5.2.2"
+    "@types/node": "^20.9.1"
   },
   "dependencies": {
-    "@influxdata/influxdb-client": "^1.33.2"
+    "@influxdata/influxdb-client": "^1.33.2",
+    "@influxdata/influxdb-client-apis": "^1.33.2"
   }
 }

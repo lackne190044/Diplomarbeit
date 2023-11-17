@@ -1,9 +1,9 @@
 // app.ts
-const message: string = 'Hello, World!';
-console.log(message);
+import { InfluxDB } from '@influxdata/influxdb-client';
 
-const {InfluxDB} = require('@influxdata/influxdb-client'); // You can generate an API token from the "API Tokens Tab" in the UI
+// You can generate an API token from the "API Tokens Tab" in the UI
 const token = '6b0bd7cfadba46e46c53747166365971';
 const org = 'school';
 const bucket = 'telegraf';
-const client = new InfluxDB({url: 'http://localhost:8086', token: token});
+
+const client = new InfluxDB({ url: 'http://localhost:8086', token: token });
