@@ -22,15 +22,24 @@ services:
       - influxdb
       - mqtt-broker
 
-  grafana:
-    image: grafana/grafana-oss:8.4.3
-    volumes:
-      - grafana-storage:/var/lib/grafana:rw
-    depends_on:
-      - influxdb
-    ports:
-      - ${GRAFANA_PORT}:3000
-  
+
+#  typescript:
+#    build:
+#      context: ./typescript-app
+#    depends_on:
+#      - influxdb
+#    ports:
+#      - "8080:80"
+#    environment:
+#      - INFLUX_URL=https://us-west-2-1.aws.cloud2.influxdata.com
+#      - INFLUX_TOKEN=6b0bd7cfadba46e46c53747166365971
+#      - INFLUX_ORG=school
+#      - INFLUX_BUCKET=telegraf
+#    volumes:
+#      - ./typescript-app/dist:/usr/share/nginx/html
+#      - ./typescript-app/nginx.conf:/etc/nginx/nginx.conf:ro
+
+
   mqtt-broker:
     image: eclipse-mosquitto:2
     ports:
@@ -41,5 +50,4 @@ services:
 
 
 volumes:
-  grafana-storage:
   influxdb-storage:
