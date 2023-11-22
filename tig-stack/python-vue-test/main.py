@@ -37,13 +37,14 @@ def get_my_data_from_influx(url, token, org, bucket):
                 results.append((record.get_field(), record.get_value(), record.get_measurement()))
         return results
 
-def get_sensor_data(url, token, org, bucket):
+def get_mqtt_data(url, token, org, bucket):
     with InfluxDBClient(url=url, token=token, org=org) as client:
         query_api = client.query_api()
         query = 'from(bucket: "telegraf")\
                   |> range(start: -10m)\
-                  |> filter(fn: (r) => r["_measurement"] == "system")\
-                  |> filter(fn: (r) => r["_field"] == "load15")'
+                  |> filter(fn: (r) => r["_measurement"] == "mqtt_consumer")\
+                  |> filter(fn: (r) => r["_field"] == "value")\
+                  |> filter(fn: (r) => r["topic"] == "telegraf/sensors/test/1")'
         result = query_api.query(org=org, query=query)
         results = []
         for table in result:
@@ -53,10 +54,11 @@ def get_sensor_data(url, token, org, bucket):
 
 @app.route('/api/data/img', methods=['GET'])
 def get_png():
-    data_to_png(influx_db_data)
+    data_to_png()
     return render_template('index.html')
 
-def data_to_png(data):
+def data_to_png():
+    data = get_mqtt_data(url, token, org, bucket)
     x = []
     y = []
     for row in data:
@@ -72,7 +74,7 @@ def data_to_png(data):
 
 @app.route('/api/data', methods=['GET'])
 def get_data():
-    data = influx_db_data
+    data = get_mqtt_data(url, token, org, bucket)
     # for _data in influx_db_data:
     #     data.append(_data)
     # return jsonify(data)
@@ -89,7 +91,7 @@ if __name__ == '__main__':
 
     # influx_db_data = get_my_data_from_influx(url, token, org, bucket)
     # influx_db_data = get_my_data_from_influx(url, token, org, bucket)
-    influx_db_data = get_sensor_data(url, token, org, bucket)
+    # influx_db_data = get_mqtt_data(url, token, org, bucket)
 
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
 
