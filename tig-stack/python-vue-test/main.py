@@ -89,9 +89,7 @@ if __name__ == '__main__':
     bucket = "telegraf"
     url = "http://localhost:8086"
 
-    # influx_db_data = get_my_data_from_influx(url, token, org, bucket)
-    # influx_db_data = get_my_data_from_influx(url, token, org, bucket)
-    # influx_db_data = get_mqtt_data(url, token, org, bucket)
+    # get_data_from_influx
 
     app.run(host="0.0.0.0", port=5000, debug=True)
 
