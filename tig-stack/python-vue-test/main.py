@@ -5,22 +5,11 @@ from datetime import datetime
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
-from flask import Flask, jsonify, render_template, Response
+from flask import Flask, jsonify, render_template, redirect
 
 import matplotlib.pyplot as plt
 
 app = Flask(__name__)
-
-def get_data_from_influx(url, token, org, bucket):
-    influx_db_data = []
-    with InfluxDBClient(url=url, token=token, org=org) as client:
-        query = 'from(bucket: "telegraf") |> range(start: -10m)'
-        tables = client.query_api().query(query, org=org)
-        for table in tables:
-            for record in table.records:
-                influx_db_data.append(record)
-    client.close()
-    return influx_db_data
 
 def get_my_data_from_influx(url, token, org, bucket):
     with InfluxDBClient(url=url, token=token, org=org) as client:
@@ -37,6 +26,24 @@ def get_my_data_from_influx(url, token, org, bucket):
                 results.append((record.get_field(), record.get_value(), record.get_measurement()))
         return results
 
+def get_data_from_influx(url, token, org, bucket):
+    influx_db_data = []
+    with InfluxDBClient(url=url, token=token, org=org) as client:
+        # start:   0  = the absolute start
+        # start: -10m = last 10 minutes
+        # start: -10d = last 10 days
+        query = 'from(bucket: "telegraf")\
+                 |> range(start: -10m, stop: now())\
+                 |> filter(fn: (r) => r["_measurement"] == "mem")\
+                 |> filter(fn: (r) => r["_field"] == "active")\
+                 |> filter(fn: (r) => r["host"] == "ddc940b2a846")'
+        tables = client.query_api().query(query, org=org)
+        for table in tables:
+            for record in table.records:
+                influx_db_data.append({"time": record.get_time(), "value": record.get_value()})
+        client.close()
+        return influx_db_data
+
 def get_mqtt_data(url, token, org, bucket):
     with InfluxDBClient(url=url, token=token, org=org) as client:
         query_api = client.query_api()
@@ -49,21 +56,17 @@ def get_mqtt_data(url, token, org, bucket):
         results = []
         for table in result:
             for record in table.records:
-                results.append((record.get_field(), record.get_value(), record.get_measurement(), record.get_time()))
+                # results.append((record.get_field(), record.get_value(), record.get_measurement(), record.get_time()))
+                influx_db_data.append({"time": record.get_time(), "value": record.get_value()})
+        client.close()
         return results
 
-@app.route('/api/data/img', methods=['GET'])
-def get_png():
-    data_to_png()
-    return render_template('index.html')
-
-def data_to_png():
-    data = get_mqtt_data(url, token, org, bucket)
+def data_to_png(data):
     x = []
     y = []
     for row in data:
-        x.append(row[3])
-        y.append(row[1])
+        x.append(row["time"])
+        y.append(row["value"])
     plt.plot(x, y)
     fig_size = plt.rcParams["figure.figsize"]
     fig_size[0] = 12
@@ -72,24 +75,26 @@ def data_to_png():
     plt.savefig('./static/plot.png')
     plt.close()
 
+@app.route('/api/data/img', methods=['GET'])
+def get_png():
+    data = get_data_from_influx(url, token, org, bucket)
+    data_to_png(data)
+    return render_template('index.html')
+
 @app.route('/api/data', methods=['GET'])
 def get_data():
-    data = get_mqtt_data(url, token, org, bucket)
-    # for _data in influx_db_data:
-    #     data.append(_data)
-    # return jsonify(data)
+    data = get_data_from_influx(url, token, org, bucket)
+    return jsonify(data)
 
-    # return render_template('index.html')
-    return str(data)
+@app.route('/', methods=['GET'])
+def home_redirect():
+    return redirect('/api/data')
 
 if __name__ == '__main__':
-    # You can generate an API token from the "API Tokens Tab" in the UI
+    # Saving token, org, bucket and the influxdb url
     token = "6b0bd7cfadba46e46c53747166365971"
     org = "school"
     bucket = "telegraf"
     url = "http://localhost:8086"
 
-    # get_data_from_influx
-
     app.run(host="0.0.0.0", port=5000, debug=True)
-
