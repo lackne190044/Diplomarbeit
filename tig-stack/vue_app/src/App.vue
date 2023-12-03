@@ -8,7 +8,7 @@ import axios from 'axios';
 export default {
   methods: {
     fetchData() {
-      axios.get('http://localhost:5000/api/data')
+      axios.get('http://localhost:5000/data')
         .then(response => {
           console.log(response.data);
           // do something with response.data

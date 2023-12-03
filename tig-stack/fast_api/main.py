@@ -7,6 +7,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 from  fastapi import FastAPI
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 import matplotlib.pyplot as plt
 
@@ -18,6 +19,15 @@ influx_db_load_data = {
 }
 
 app = FastAPI()
+
+# CORS settings to allow requests from all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Update this to the specific origins you want to allow
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_my_data_from_influx(url, token, org, bucket):
     with InfluxDBClient(url=url, token=token, org=org) as client:
