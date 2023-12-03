@@ -5,7 +5,7 @@ from datetime import datetime
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
-from flask import Flask, jsonify, render_template, redirect
+from flask import Flask, jsonify, render_template, redirect, send_file
 
 import matplotlib.pyplot as plt
 
@@ -68,10 +68,7 @@ def data_to_png(data):
         x.append(row["time"])
         y.append(row["value"])
     plt.plot(x, y)
-    fig_size = plt.rcParams["figure.figsize"]
-    fig_size[0] = 12
-    fig_size[1] = 5
-    plt.rcParams["figure.figsize"] = fig_size
+    plt.rcParams["figure.figsize"] = [12, 5]
     plt.savefig('./static/plot.png')
     plt.close()
 
@@ -79,7 +76,8 @@ def data_to_png(data):
 def get_png():
     data = get_data_from_influx(url, token, org, bucket)
     data_to_png(data)
-    return render_template('index.html')
+    return send_file('static/plot.png', mimetype='image/gif')
+    # return render_template('index.html')
 
 @app.route('/api/data', methods=['GET'])
 def get_data():
