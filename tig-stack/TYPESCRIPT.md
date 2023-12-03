@@ -38,3 +38,7 @@ node index.js
 - Access the influxdb using python
 - Throwing it into App.vue or something like it
 - Using matplotlib or something for graphs (MABY)
+
+
+# How to run the fast api:
+uvicorn main:app --host 0.0.0.0 --port 5000 --reload

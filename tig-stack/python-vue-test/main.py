@@ -5,11 +5,19 @@ from datetime import datetime
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
-from flask import Flask, jsonify, render_template, redirect, send_file
+from  fastapi import FastAPI
+from fastapi.responses import FileResponse
 
 import matplotlib.pyplot as plt
 
-app = Flask(__name__)
+influx_db_load_data = {
+    'token': "6b0bd7cfadba46e46c53747166365971",
+    'org': "school",
+    'bucket': "telegraf",
+    'url': "http://localhost:8086"
+}
+
+app = FastAPI()
 
 def get_my_data_from_influx(url, token, org, bucket):
     with InfluxDBClient(url=url, token=token, org=org) as client:
@@ -72,27 +80,14 @@ def data_to_png(data):
     plt.savefig('./static/plot.png')
     plt.close()
 
-@app.route('/api/data/img', methods=['GET'])
+@app.get('/data/img')
 def get_png():
-    data = get_data_from_influx(url, token, org, bucket)
+    data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'])
     data_to_png(data)
-    return send_file('static/plot.png', mimetype='image/gif')
-    # return render_template('index.html')
+    return FileResponse('static/plot.png')
 
-@app.route('/api/data', methods=['GET'])
+@app.get('/data')
 def get_data():
-    data = get_data_from_influx(url, token, org, bucket)
-    return jsonify(data)
+    data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'])
+    return data
 
-@app.route('/', methods=['GET'])
-def home_redirect():
-    return redirect('/api/data')
-
-if __name__ == '__main__':
-    # Saving token, org, bucket and the influxdb url
-    token = "6b0bd7cfadba46e46c53747166365971"
-    org = "school"
-    bucket = "telegraf"
-    url = "http://localhost:8086"
-
-    app.run(host="0.0.0.0", port=5000, debug=True)

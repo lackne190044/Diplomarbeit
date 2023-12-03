@@ -3,3 +3,4 @@ tig-stack/typescript-app/node_modules/*
 tig-stack/typescript-test/node_modules/*
 tig-stack/python-vue-test/node_modules/*
 tig-stack/python-vue-test/venv/*
+tig-stack/python-vue-test/__pycache__/*
