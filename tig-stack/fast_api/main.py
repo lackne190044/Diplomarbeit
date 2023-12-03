@@ -14,7 +14,7 @@ influx_db_load_data = {
     'token': "6b0bd7cfadba46e46c53747166365971",
     'org': "school",
     'bucket': "telegraf",
-    'url': "http://localhost:8086"
+    'url': "http://influxdb:8086"
 }
 
 app = FastAPI()
@@ -77,14 +77,14 @@ def data_to_png(data):
         y.append(row["value"])
     plt.plot(x, y)
     plt.rcParams["figure.figsize"] = [12, 5]
-    plt.savefig('./static/plot.png')
+    plt.savefig('/tmp/plot.png')
     plt.close()
 
 @app.get('/data/img')
 def get_png():
     data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'])
     data_to_png(data)
-    return FileResponse('static/plot.png')
+    return FileResponse('/tmp/plot.png')
 
 @app.get('/data')
 def get_data():

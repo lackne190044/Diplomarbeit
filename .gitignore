@@ -1,6 +1,6 @@
 DEADJOE
 tig-stack/typescript-app/node_modules/*
 tig-stack/typescript-test/node_modules/*
-tig-stack/python-vue-test/node_modules/*
-tig-stack/python-vue-test/venv/*
-tig-stack/python-vue-test/__pycache__/*
+tig-stack/vue_app/node_modules/*
+tig-stack/fast_api/venv/*
+tig-stack/fast_api/__pycache__/*
