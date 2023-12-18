@@ -31,6 +31,18 @@ services:
     depends_on:
       - influxdb
 
+  vue_app:
+    image: vue_app
+    build:
+      context: ./vue_app
+    volumes:
+      - ./vue_app:/home/node/vueapp
+    ports:
+      - "8080:8080"
+    depends_on:
+      - fast_api
+    command: npm run dev
+
   mqtt-broker:
     image: eclipse-mosquitto:2
     ports:
