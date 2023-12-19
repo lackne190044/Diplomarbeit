@@ -57,7 +57,7 @@ export default {
   methods: {
     fetchRaw() {
       this.displayRawData = true;
-      axios.get('http://localhost:5000/data')
+      axios.get('http://localhost:5000/data0')
         .then(response => {
           console.log(response.data);
           this.raw_results = { Data: { Raw: response.data } };
@@ -68,7 +68,7 @@ export default {
     },
     fetchImg() {
       this.displayRawData = false;
-      axios.get('http://localhost:5000/data/img', { responseType: 'arraybuffer' })
+      axios.get('http://localhost:5000/data/img1', { responseType: 'arraybuffer' })
         .then(response => {
           const blob = new Blob([response.data], { type: 'image/png' });
           this.imgBlobUrl = URL.createObjectURL(blob);

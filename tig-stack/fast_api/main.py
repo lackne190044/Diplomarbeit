@@ -1,4 +1,5 @@
 import io
+import pytz
 
 from datetime import datetime
 
@@ -29,36 +30,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def get_my_data_from_influx(url, token, org, bucket):
-    with InfluxDBClient(url=url, token=token, org=org) as client:
-        query_api = client.query_api()
-        query = 'from(bucket:"telegraf")\
-                |> range(start: -10m)\
-                |> filter(fn:(r) => r._measurement == "my_measurement")\
-                |> filter(fn:(r) => r.location == "Prague")\
-                |> filter(fn:(r) => r._field == "temperature")'
-        result = query_api.query(org=org, query=query)
-        results = []
-        for table in result:
-            for record in table.records:
-                results.append((record.get_field(), record.get_value(), record.get_measurement()))
-        return results
-
-def get_data_from_influx(url, token, org, bucket):
+def get_data_from_influx(url, token, org, bucket, mesurement, field, host):
     influx_db_data = []
     with InfluxDBClient(url=url, token=token, org=org) as client:
         # start:   0  = the absolute start
         # start: -10m = last 10 minutes
         # start: -10d = last 10 days
-        query = 'from(bucket: "telegraf")\
-                 |> range(start: -10m, stop: now())\
-                 |> filter(fn: (r) => r["_measurement"] == "mem")\
-                 |> filter(fn: (r) => r["_field"] == "active")\
-                 |> filter(fn: (r) => r["host"] == "ddc940b2a846")'
+        query = f'from(bucket: "telegraf")\
+                 |> range(start: -10m)\
+                 |> filter(fn: (r) => r["_measurement"] == "{mesurement}")\
+                 |> filter(fn: (r) => r["_field"] == "{field}")\
+                 |> filter(fn: (r) => r["host"] == "{host}")'
         tables = client.query_api().query(query, org=org)
         for table in tables:
             for record in table.records:
-                influx_db_data.append({"time": record.get_time(), "value": record.get_value()})
+                time_gmt = record.get_time().astimezone(pytz.timezone('Europe/Paris'))
+                influx_db_data.append({"time": time_gmt, "value": record.get_value()})
         client.close()
         return influx_db_data
 
@@ -90,14 +77,29 @@ def data_to_png(data):
     plt.savefig('/tmp/plot.png')
     plt.close()
 
-@app.get('/data/img')
-def get_png():
-    data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'])
+@app.get('/data/img0')
+def get_png0():
+    data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
+                                "mem", "active", "bc690f07f6f3")
     data_to_png(data)
     return FileResponse('/tmp/plot.png')
 
-@app.get('/data')
-def get_data():
-    data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'])
+@app.get('/data/img1')
+def get_png1():
+    data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
+                                "kernel", "context_switches", "bc690f07f6f3")
+    data_to_png(data)
+    return FileResponse('/tmp/plot.png')
+
+@app.get('/data0')
+def get_data0():
+    data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
+                                "mem", "active", "bc690f07f6f3")
+    return data
+
+@app.get('/data1')
+def get_data1():
+    data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
+                                "kernel", "context_switches", "bc690f07f6f3")
     return data
 
