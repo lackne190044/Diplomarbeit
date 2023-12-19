@@ -16,7 +16,8 @@ influx_db_load_data = {
     'token': "6b0bd7cfadba46e46c53747166365971",
     'org': "school",
     'bucket': "telegraf",
-    'url': "http://influxdb:8086"
+    # 'url': "http://172.31.182.123:8086",
+    'url': "http://influxdb:8086",
 }
 
 app = FastAPI()
@@ -30,17 +31,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def get_data_from_influx(url, token, org, bucket, mesurement, field, host):
+def get_data_from_influx(url, token, org, bucket, mesurement, field, host, topic):
     influx_db_data = []
     with InfluxDBClient(url=url, token=token, org=org) as client:
         # start:   0  = the absolute start
         # start: -10m = last 10 minutes
         # start: -10d = last 10 days
         query = f'from(bucket: "telegraf")\
-                 |> range(start: -10m)\
+                 |> range(start: -15m)\
                  |> filter(fn: (r) => r["_measurement"] == "{mesurement}")\
                  |> filter(fn: (r) => r["_field"] == "{field}")\
-                 |> filter(fn: (r) => r["host"] == "{host}")'
+                 |> filter(fn: (r) => r["host"] == "{host}")\
+                 |> filter(fn: (r) => r["topic"] == "{topic}")'
         tables = client.query_api().query(query, org=org)
         for table in tables:
             for record in table.records:
@@ -80,26 +82,26 @@ def data_to_png(data):
 @app.get('/data/img0')
 def get_png0():
     data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
-                                "mem", "active", "bc690f07f6f3")
+                                "mqtt_consumer", "value", "6e2afc2e10d4", "telegraf/sensors/test/1")
     data_to_png(data)
     return FileResponse('/tmp/plot.png')
 
 @app.get('/data/img1')
 def get_png1():
     data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
-                                "kernel", "context_switches", "bc690f07f6f3")
+                                "mqtt_consumer", "value", "6e2afc2e10d4", "telegraf/sensors/test/1")
     data_to_png(data)
     return FileResponse('/tmp/plot.png')
 
 @app.get('/data0')
 def get_data0():
     data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
-                                "mem", "active", "bc690f07f6f3")
+                                "mqtt_consumer", "value", "6e2afc2e10d4", "telegraf/sensors/test/1")
     return data
 
 @app.get('/data1')
 def get_data1():
     data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
-                                "kernel", "context_switches", "bc690f07f6f3")
+                                "mqtt_consumer", "value", "6e2afc2e10d4", "telegraf/sensors/test/1")
     return data
 
