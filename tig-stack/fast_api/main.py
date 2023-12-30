@@ -37,12 +37,19 @@ def get_data_from_influx(url, token, org, bucket, mesurement, field, host, topic
         # start:   0  = the absolute start
         # start: -10m = last 10 minutes
         # start: -10d = last 10 days
-        query = f'from(bucket: "telegraf")\
-                 |> range(start: -15m)\
-                 |> filter(fn: (r) => r["_measurement"] == "{mesurement}")\
-                 |> filter(fn: (r) => r["_field"] == "{field}")\
-                 |> filter(fn: (r) => r["host"] == "{host}")\
-                 |> filter(fn: (r) => r["topic"] == "{topic}")'
+        if topic != "":
+            query = f'from(bucket: "telegraf")\
+                     |> range(start: -15m)\
+                     |> filter(fn: (r) => r["_measurement"] == "{mesurement}")\
+                     |> filter(fn: (r) => r["_field"] == "{field}")\
+                     |> filter(fn: (r) => r["host"] == "{host}")\
+                     |> filter(fn: (r) => r["topic"] == "{topic}")'
+        else:
+            query = f'from(bucket: "telegraf")\
+                     |> range(start: -15m)\
+                     |> filter(fn: (r) => r["_measurement"] == "{mesurement}")\
+                     |> filter(fn: (r) => r["_field"] == "{field}")\
+                     |> filter(fn: (r) => r["host"] == "{host}")'
         tables = client.query_api().query(query, org=org)
         for table in tables:
             for record in table.records:
@@ -50,23 +57,6 @@ def get_data_from_influx(url, token, org, bucket, mesurement, field, host, topic
                 influx_db_data.append({"time": time_gmt, "value": record.get_value()})
         client.close()
         return influx_db_data
-
-def get_mqtt_data(url, token, org, bucket):
-    with InfluxDBClient(url=url, token=token, org=org) as client:
-        query_api = client.query_api()
-        query = 'from(bucket: "telegraf")\
-                  |> range(start: -10m)\
-                  |> filter(fn: (r) => r["_measurement"] == "mqtt_consumer")\
-                  |> filter(fn: (r) => r["_field"] == "value")\
-                  |> filter(fn: (r) => r["topic"] == "telegraf/sensors/test/1")'
-        result = query_api.query(org=org, query=query)
-        results = []
-        for table in result:
-            for record in table.records:
-                # results.append((record.get_field(), record.get_value(), record.get_measurement(), record.get_time()))
-                influx_db_data.append({"time": record.get_time(), "value": record.get_value()})
-        client.close()
-        return results
 
 def data_to_png(data):
     x = []
@@ -79,29 +69,16 @@ def data_to_png(data):
     plt.savefig('/tmp/plot.png')
     plt.close()
 
-@app.get('/data/img0')
-def get_png0():
+@app.get('/data/img')
+def get_png(mesure: str="mqtt_consumer", field: str="value", host: str="6e2afc2e10d4", topic: str=""):
     data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
-                                "mqtt_consumer", "value", "6e2afc2e10d4", "telegraf/sensors/test/1")
+                                mesure, field, host, topic)
     data_to_png(data)
     return FileResponse('/tmp/plot.png')
 
-@app.get('/data/img1')
-def get_png1():
+@app.get('/data')
+def get_data(mesure: str="mqtt_consumer", field: str="value", host: str="6e2afc2e10d4", topic: str=""):
     data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
-                                "mqtt_consumer", "value", "6e2afc2e10d4", "telegraf/sensors/test/1")
-    data_to_png(data)
-    return FileResponse('/tmp/plot.png')
-
-@app.get('/data0')
-def get_data0():
-    data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
-                                "mqtt_consumer", "value", "6e2afc2e10d4", "telegraf/sensors/test/1")
-    return data
-
-@app.get('/data1')
-def get_data1():
-    data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
-                                "mqtt_consumer", "value", "6e2afc2e10d4", "telegraf/sensors/test/1")
+                                mesure, field, host, topic)
     return data
 
