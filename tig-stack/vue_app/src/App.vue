@@ -1,7 +1,7 @@
 <template>
   <div>
-    <button @click="fetchRaw">Fetch data</button>
-    <button @click="fetchImg">Fetch img</button>
+    <button @click="fetchRaw('mem', 'active', '3da387c64301')">Fetch data</button>
+    <button @click="fetchImg('mem', 'active', '3da387c64301')">Fetch img</button>
 
     <div v-if="displayRawData">
        <table class="data-table">
@@ -52,12 +52,16 @@ export default {
       raw_results: { Data: { Raw: null } },
       imgBlobUrl: null,
       displayRawData: null,
+      measure: null,
+      field: null,
+      host: null
     };
   },
   methods: {
-    fetchRaw() {
+    fetchRaw(measure, field, host) {
       this.displayRawData = true;
-      axios.get('http://localhost:5000/data0')
+      const url = `http://localhost:5000/data?mesure=${measure}&field=${field}&host=${host}`
+      axios.get(url)
         .then(response => {
           console.log(response.data);
           this.raw_results = { Data: { Raw: response.data } };
@@ -66,9 +70,10 @@ export default {
           console.error(error);
         });
     },
-    fetchImg() {
+    fetchImg(measure, field, host) {
       this.displayRawData = false;
-      axios.get('http://localhost:5000/data/img1', { responseType: 'arraybuffer' })
+      const url = `http://localhost:5000/data/img?mesure=${measure}&field=${field}&host=${host}`
+      axios.get(url, { responseType: 'arraybuffer' })
         .then(response => {
           const blob = new Blob([response.data], { type: 'image/png' });
           this.imgBlobUrl = URL.createObjectURL(blob);
