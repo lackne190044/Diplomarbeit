@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 influx_db_load_data = {
     'token': "6b0bd7cfadba46e46c53747166365971",
@@ -64,8 +65,33 @@ def data_to_png(data):
     for row in data:
         x.append(row["time"])
         y.append(row["value"])
+
+    # Check if y is not empty
+    if not y:
+        print("Empty data. Cannot generate plot.")
+        return
+
+    # Calculate analytics
+    average_value = np.mean(y)
+    
+    if len(y) > 0:
+        highest_point = max(y)
+        lowest_point = min(y)
+    else:
+        highest_point = None
+        lowest_point = None    
+
+    # Plot the data
     plt.plot(x, y)
+
+    # Annotate analytics on the plot
+    plt.axhline(y=average_value, color='r', linestyle='--', label=f'Average: {average_value:.2f}')
+    plt.scatter(x[y.index(highest_point)], highest_point, color='g', marker='.', label=f'Highest: {highest_point:.2f}')
+    plt.scatter(x[y.index(lowest_point)], lowest_point, color='b', marker='.', label=f'Lowest: {lowest_point:.2f}')
+
+    # Set plot parameters
     plt.rcParams["figure.figsize"] = [12, 5]
+    plt.legend()
     plt.savefig('/tmp/plot.png')
     plt.close()
 
