@@ -32,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def get_data_from_influx(url, token, org, bucket, mesurement, field, host, topic):
+def get_data_from_influx(url, token, org, bucket, mesurement, field, host, topic, start, stop):
     influx_db_data = []
     with InfluxDBClient(url=url, token=token, org=org) as client:
         # start:   0  = the absolute start
@@ -40,14 +40,14 @@ def get_data_from_influx(url, token, org, bucket, mesurement, field, host, topic
         # start: -10d = last 10 days
         if topic != "":
             query = f'from(bucket: "telegraf")\
-                     |> range(start: -15m)\
+                     |> range(start: {start}, stop: {stop})\
                      |> filter(fn: (r) => r["_measurement"] == "{mesurement}")\
                      |> filter(fn: (r) => r["_field"] == "{field}")\
                      |> filter(fn: (r) => r["host"] == "{host}")\
                      |> filter(fn: (r) => r["topic"] == "{topic}")'
         else:
             query = f'from(bucket: "telegraf")\
-                     |> range(start: -15m)\
+                     |> range(start: {start}, stop: {stop})\
                      |> filter(fn: (r) => r["_measurement"] == "{mesurement}")\
                      |> filter(fn: (r) => r["_field"] == "{field}")\
                      |> filter(fn: (r) => r["host"] == "{host}")'
@@ -96,15 +96,15 @@ def data_to_png(data):
     plt.close()
 
 @app.get('/data/img')
-def get_png(mesure: str="mqtt_consumer", field: str="value", host: str="6e2afc2e10d4", topic: str=""):
+def get_png(mesure: str="mqtt_consumer", field: str="value", host: str="6e2afc2e10d4", topic: str="", start: str="-15m", stop: str="now()"):
     data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
-                                mesure, field, host, topic)
+                                mesure, field, host, topic, start, stop)
     data_to_png(data)
     return FileResponse('/tmp/plot.png')
 
 @app.get('/data')
-def get_data(mesure: str="mqtt_consumer", field: str="value", host: str="6e2afc2e10d4", topic: str=""):
+def get_data(mesure: str="mqtt_consumer", field: str="value", host: str="6e2afc2e10d4", topic: str="", start: str="-15m", stop: str="now()"):
     data = get_data_from_influx(influx_db_load_data['url'], influx_db_load_data['token'], influx_db_load_data['org'], influx_db_load_data['bucket'],
-                                mesure, field, host, topic)
+                                mesure, field, host, topic, start, stop)
     return data
 

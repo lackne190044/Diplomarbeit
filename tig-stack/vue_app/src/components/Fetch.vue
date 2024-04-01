@@ -4,7 +4,7 @@ import axios from 'axios';
 export default {
   data() {
     return {
-      hosts: ['3e9d28342038', '3e9d28342037'],
+      hosts: ['3e9d28342037'],
 
       raw_results: {},
       imgBlobUrl: {},
@@ -14,7 +14,13 @@ export default {
 
       Measure: null,
       field: null,
-      host: null
+      host: null,
+
+      time_0: null,
+      time_0_unit: 'm', 
+
+      time_1: null,
+      time_1_unit: 'm', 
     };
   },
   methods: {
@@ -22,7 +28,7 @@ export default {
       this.displayRawData[host] = true;
       this.displayImg[host] = false;
       
-      const url = `http://localhost:5000/data?mesure=${measure}&field=${field}&host=${host}`
+      const url = `http://localhost:5000/data?mesure=${measure}&field=${field}&host=${host}&start=${this.time_0 + this.time_0_unit}&stop=${this.time_1 + this.time_1_unit}`
       axios.get(url)
         .then(response => {
           console.log(response.data);
@@ -35,7 +41,9 @@ export default {
     fetchImg(measure, field, host) {
       this.displayRawData[host] = false;
       this.displayImg[host] = true;
-      const url = `http://localhost:5000/data/img?mesure=${measure}&field=${field}&host=${host}`
+      console.log(this.time_0);
+      console.log(this.time_0_unit);
+      const url = `http://localhost:5000/data/img?mesure=${measure}&field=${field}&host=${host}&start=${this.time_0 + this.time_0_unit}&stop=${this.time_1 + this.time_1_unit}`
       axios.get(url, { responseType: 'arraybuffer' })
         .then(response => {
           const blob = new Blob([response.data], { type: 'image/png' });
@@ -90,6 +98,7 @@ export default {
       </div>
       <div class="col">Data</div>
       <div class="col">Image</div>
+      <div class="col">Time</div>
       <div class="col">Closing</div>
     </div>
 
@@ -97,6 +106,20 @@ export default {
       <div class="col">Test 1</div>
       <div class="col"><button @click="fetchRaw('mem', 'active', hosts[0])">Fetch table</button></div>
       <div class="col"><button @click="fetchImg('mem', 'active', hosts[0])">Fetch image</button></div>
+      <div class="col">
+	<input v-model="time_0" type="number" min="-999999" max="999999" />
+	<select v-model="time_0_unit" name="time" id="time"> 
+	  <option value="s">Seconds</option> 
+	  <option value="m">Minutes</option> 
+	  <option value="d">Days</option> 
+	</select>
+	<input v-model="time_1" type="number" min="-999999" max="999999" />
+	<select v-model="time_1_unit" name="time" id="time"> 
+	  <option value="s">Seconds</option> 
+	  <option value="m">Minutes</option> 
+	  <option value="d">Days</option> 
+	</select>
+      </div>
       <div class="col"><button @click="close(hosts[0])">Close</button></div>
       <div v-if="displayImg[hosts[0]]">
 	<img :src="imgBlobUrl[hosts[0]]" />
@@ -118,34 +141,6 @@ export default {
 	</table>
       </div>
     </div>
-
-
-    <div class="row bg-secondary rounded mt-2 mb-1">
-      <div class="col">Test 2</div>
-      <div class="col"><button @click="fetchRaw('mem', 'active', hosts[1])">Fetch table</button></div>
-      <div class="col"><button @click="fetchImg('mem', 'active', hosts[1])">Fetch image</button></div>
-      <div class="col"><button @click="close(hosts[1])">Close</button></div>
-      <div v-if="displayImg[hosts[1]]">
-	<img :src="imgBlobUrl[hosts[1]]" />
-      </div>
-      <div v-if="displayRawData[hosts[1]]">
-	 <table class="data-table">
-	  <thead>
-	    <tr>
-	      <th>Time</th>
-	      <th>Value</th>
-	    </tr>
-	  </thead>
-	  <tbody>
-	    <tr v-for="(item, index) in raw_results[hosts[1]]" :key="index">
-	      <td>{{ item.time }}</td>
-	      <td>{{ item.value }}</td>
-	    </tr>
-	  </tbody>
-	</table>
-      </div>
-    </div>
-
   </div>
 </template>
 
