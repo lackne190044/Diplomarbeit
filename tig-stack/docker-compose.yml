@@ -22,22 +22,36 @@ services:
       - influxdb
       - mqtt-broker
 
+  fast_api:
+    image: fast_api
+    build:
+      context: ./fast_api
+    ports:
+      - "5000:5000"
+    depends_on:
+      - influxdb
 
-#  typescript:
-#    build:
-#      context: ./typescript-app
-#    depends_on:
-#      - influxdb
-#    ports:
-#      - "8080:80"
-#    environment:
-#      - INFLUX_URL=https://us-west-2-1.aws.cloud2.influxdata.com
-#      - INFLUX_TOKEN=6b0bd7cfadba46e46c53747166365971
-#      - INFLUX_ORG=school
-#      - INFLUX_BUCKET=telegraf
-#    volumes:
-#      - ./typescript-app/dist:/usr/share/nginx/html
-#      - ./typescript-app/nginx.conf:/etc/nginx/nginx.conf:ro
+  # vue_app:
+  #   image: vue_app
+  #   build:
+  #     context: ./vue_app
+  #   volumes:
+  #     - ./vue_app:/home/node/vueapp
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - fast_api
+  #   command: npm run dev
+  vue_app:
+    image: vue_app
+    build:
+      context: ./vue_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - fast_api
+    command: npm run dev
+    working_dir: /home/node/vueapp  # Add this line to set the working directory
 
 
   mqtt-broker:
