@@ -41,8 +41,6 @@ export default {
     fetchImg(measure, field, host) {
       this.displayRawData[host] = false;
       this.displayImg[host] = true;
-      console.log(this.time_0);
-      console.log(this.time_0_unit);
       const url = `http://localhost:5000/data/img?mesure=${measure}&field=${field}&host=${host}&start=${this.time_0 + this.time_0_unit}&stop=${this.time_1 + this.time_1_unit}`
       axios.get(url, { responseType: 'arraybuffer' })
         .then(response => {
